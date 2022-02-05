@@ -40,6 +40,7 @@ urlpatterns = [
 if settings.DEBUG:
     urlpatterns += [
         path("accounts/", include("django.contrib.auth.urls")),
+        path("accounts/", include("allauth.urls")),
         path("accounts/profile/", blango_auth.views.profile, name="profile"),
         path("__debug__/", include(debug_toolbar.urls)),
     ]
