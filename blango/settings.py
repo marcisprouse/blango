@@ -53,6 +53,14 @@ class Dev(Configuration):
         ],
     }
 
+    
+    SWAGGER_SETTINGS = {
+        "SECURITY_DEFINITIONS": {
+            "Token": {"type": "apiKey", "name": "Authorization", "in": "header"},
+            "Basic": {"type": "basic"},
+        }
+    }
+
     # Application definition
 
     INSTALLED_APPS = [
@@ -74,6 +82,7 @@ class Dev(Configuration):
     'allauth.socialaccount.providers.google',
     'rest_framework',
     'rest_framework.authtoken',
+    'drf_yasg',
     ]
 
     SITE_ID = 1
