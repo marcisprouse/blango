@@ -13,6 +13,14 @@ from django.views.decorators.vary import vary_on_headers, vary_on_cookie
 
 from rest_framework.exceptions import PermissionDenied
 
+# for get_queryset method for User-Based Filtering
+from django.db.models import Q
+from django.utils import timezone
+
+# for get_queryset method for URL-based filtering example
+from datetime import timedelta
+from django.http import Http404
+
 '''
 We don't need these anymore because we wrapped them together into viewsets below.
 
@@ -80,7 +88,45 @@ class PostViewSet(viewsets.ModelViewSet):
     
     # cache the list of Posts for two minuts, overriding the list() view.
     @method_decorator(cache_page(120))
+    # making sure we're varying the list() resonse on the Cookie and authorization headers for the get_queryset method to work.
+    @method_decorator(vary_on_headers("Authorization", "Cookie"))
     def list(self, *args, **kwargs):
         return super(PostViewSet, self).list(*args, **kwargs)
+
+    # user-based filtering with get_queryset method
+    def get_queryset(self):
+        if self.request.user.is_anonymous:
+            # published only
+            queryset = self.queryset.filter(published_at__lte=timezone.now())
+
+        elif not self.request.user.is_staff:
+            # allow all
+            queryset = self.queryset
+        else:
+            queryset = self.queryset.filter(
+                Q(published_at__lte=timezone.now()) | Q(author=self.request.user)
+            )
+
+        time_period_name = self.kwargs.get("period_name")
+
+        if not time_period_name:
+            # no further filtering required
+            return queryset
+
+        if time_period_name == "new":
+            return queryset.filter(
+                published_at__gte=timezone.now() - timedelta(hours=1)
+            )
+        elif time_period_name == "today":
+            return queryset.filter(
+                published_at__date=timezone.now().date(),
+            )
+        elif time_period_name == "week":
+            return queryset.filter(published_at__gte=timezone.now() - timedelta(days=7))
+        else:
+            raise Http404(
+                f"Time period {time_period_name} is not valid, should be "
+                f"'new', 'today' or 'week'"
+            )
 
     
