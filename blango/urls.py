@@ -1,6 +1,7 @@
 import blog.views
 from django_registration.backends.activation.views import RegistrationView
 from blango_auth.forms import BlangoRegistrationForm
+from django.conf.urls.static import static
 
 """blango URL Configuration
 
@@ -44,5 +45,5 @@ if settings.DEBUG:
         path("accounts/", include("allauth.urls")),
         path("accounts/profile/", blango_auth.views.profile, name="profile"),
         path("__debug__/", include(debug_toolbar.urls)),
-    ]
+    ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
